@@ -49,8 +49,7 @@ class Validator
         // Load language file in directory
         $langFile = rtrim($langDir, '/') . '/' . $lang . '.php';
         if ( stream_resolve_include_path($langFile) ) {
-            $langMessages = include $langFile;
-            static::$_ruleMessages = array_merge(static::$_ruleMessages, $langMessages);
+            static::$_ruleMessages = include $langFile;
         } else {
             throw new InvalidArgumentException("fail to load language file '$langFile'");
         }
@@ -626,7 +625,7 @@ class Validator
                 $param = $param->format('Y-m-d');
             }
             // Use custom label instead of field name if set
-            if(isset($this->_labels[$param])) {
+            if(@$this->_labels[$param]) {
                 $param = $this->_labels[$param];
             }
             $values[] = $param;
@@ -693,7 +692,7 @@ class Validator
 
     /**
      * Determine whether a field is being validated by the given rule.
-     * 
+     *
      * @param string $name The name of the rule
      * @param string $field The name of the field
      * @return boolean
