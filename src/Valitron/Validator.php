@@ -828,7 +828,7 @@ class Validator
             }
             // Use custom label instead of field name if set
             if (is_string($params[0])) {
-                if (isset($this->_labels[$param])) {
+                if(@$this->_labels[$param]) {
                     $param = $this->_labels[$param];
                 }
             }
