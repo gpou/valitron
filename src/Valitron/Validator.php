@@ -823,16 +823,27 @@ class Validator
                 $param = $param->format('Y-m-d');
             } else {
                 if (is_object($param)) {
-                    $param = get_class($param);
+                    // Lets try to convert the param into string
+                    $ifFails = function() {
+                        throw new \Exception("String conversion failed");
+                    };
+                    try {
+                        set_error_handler($ifFails);
+                        $param = strval($param);
+                    } catch (\Exception $e) {
+                        // Avoid converting the value into string
+                    }
+                    restore_error_handler();
                 }
             }
-            // Use custom label instead of field name if set
-            if (is_string($params[0])) {
+
+            if (!is_object($param)) {
+                // Use custom label instead of field name if set
                 if(@$this->_labels[$param]) {
                     $param = $this->_labels[$param];
                 }
+                $values[] = $param;
             }
-            $values[] = $param;
         }
 
         $this->_errors[$field][] = vsprintf($msg, $values);
@@ -1054,10 +1065,28 @@ class Validator
             if (is_array($params)) {
                 $i = 1;
                 foreach ($params as $k => $v) {
-                    $tag = '{field'. $i .'}';
-                    $label = isset($params[$k]) && (is_numeric($params[$k]) || is_string($params[$k])) && isset($this->_labels[$params[$k]]) ? $this->_labels[$params[$k]] : $tag;
-                    $msg = str_replace($tag, $label, $msg);
-                    $i++;
+                    if (is_object($v)) {
+                        // Only add param's substitution label if it is going to
+                        // exist as a parameter.
+                        $ifFails = function() {
+                            throw new \Exception("String conversion failed");
+                        };
+                        try {
+                            set_error_handler($ifFails);
+                            $v = strval($v);
+                        } catch (\Exception $e) {
+                            // Avoid converting the value into string
+                        }
+                        restore_error_handler();
+                    }
+                    if (!is_object($v) || $v instanceof \DateTime) {
+                        $tag = '{field'. $i .'}';
+                        $label = isset($params[$k]) && !is_array($params[$k]) && isset($this->_labels[$params[$k]])
+                            ? $this->_labels[$params[$k]]
+                            : $tag;
+                        $msg = str_replace($tag, $label, $msg);
+                        $i++;
+                    }
                 }
             }
         } else {
