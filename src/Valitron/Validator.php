@@ -686,7 +686,11 @@ class Validator
                 $value = isset($this->_fields[$field]) ? $this->_fields[$field] : null;
 
                 // Don't validate if the field is not required and the value is empty
-                if ($v['rule'] !== 'required' && !$this->hasRule('required', $field) && $value == '') {
+                if ($v['rule'] !== 'required'
+                    && !$this->hasRule('required', $field)
+                    && !is_object($value)
+                    && $value == ''
+                ) {
                     continue;
                 }
 
